@@ -122,6 +122,12 @@ shared_examples_for "check that basic operations with postgres works correctly f
 
   end # when try to delete a record with id = 1
 
+  it "destroys a record without any error" do
+    expect {
+      subject.find(1).destroy
+    }.not_to raise_error
+  end
+
   context "when try to create new record outside the range of partitions" do
 
     it "raises ActiveRecord::StatementInvalid" do

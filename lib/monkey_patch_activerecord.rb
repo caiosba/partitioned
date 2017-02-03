@@ -18,9 +18,9 @@ module ActiveRecord
     # of the parent table.
     def relation_for_destroy
       # ****** BEGIN PARTITIONED PATCH ******
-      if self.class.respond_to?(:dynamic_arel_table)
-        using_arel_table = dynamic_arel_table()
-        return self.class.unscoped.from_partition(using_arel_table).where(self.class.primary_key => id)
+      if self.class.respond_to?(:partition_keys)
+        symbolized_attributes = attributes.symbolize_keys
+        return self.class.unscoped.from_partition(*self.class.partition_keys.map{|attribute_name| symbolized_attributes[attribute_name]}).where(self.class.primary_key => id)
       end
       # ****** END PARTITIONED PATCH ******
 
