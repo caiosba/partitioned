@@ -66,12 +66,17 @@ module ActiveRecord
       # ****** END PARTITIONED PATCH ******
       attributes_values = arel_attributes_with_values_for_update(attribute_names)
       if attributes_values.empty?
-        0
+        rows_affected = 0
+        @_trigger_update_callback = true
       else
-        self.class.unscoped._update_record attributes_values, id, id_was
+        rows_affected = self.class.unscoped._update_record attributes_values, id, id_in_database
+        @_trigger_update_callback = rows_affected > 0
       end
-    end
 
+      yield(self) if block_given?
+
+      rows_affected
+    end
   end # module Persistence
 
   module QueryMethods
