@@ -48,6 +48,9 @@ module ActiveRecord
       self.id ||= new_id if self.class.primary_key
 
       @new_record = false
+
+      yield(self) if block_given?
+
       id
     end
 
@@ -80,15 +83,11 @@ module ActiveRecord
   end # module Persistence
 
   module QueryMethods
-
     # This method is patched to change the default behavior of select
     # to use the Relation's Arel::Table
     def build_select(arel)
-      if !select_values.empty?
-        expanded_select = select_values.map do |field|
-          columns_hash.key?(field.to_s) ? arel_table[field] : field
-        end
-        arel.project(*expanded_select)
+      if select_values.any?
+        arel.project(*arel_columns(select_values.uniq))
       else
         # ****** BEGIN PARTITIONED PATCH ******
         # Original line:
@@ -153,7 +152,7 @@ module ActiveRecord
       scope = @klass.unscoped
       # ****** BEGIN PARTITIONED PATCH ******
       if @klass.respond_to?(:dynamic_arel_table)
-        using_arel_table = @klass.dynamic_arel_table(Hash[*values.map { |k,v| [k.name,v] }.flatten])
+        using_arel_table = @klass.dynamic_arel_table(Hash[*values.map { |k,v| [k.name,v] }.flatten(1)])
         scope.from!(using_arel_table.name)
       end
       # ****** END PARTITIONED PATCH ******
