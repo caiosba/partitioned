@@ -160,7 +160,7 @@ module ActiveRecord
       if @klass.finder_needs_type_condition?
         scope.unscope!(where: @klass.inheritance_column)
       end
-      
+
       relation = scope.where(@klass.primary_key => (id_was || id))
       bvs = binds + relation.bound_attributes
       um = relation
