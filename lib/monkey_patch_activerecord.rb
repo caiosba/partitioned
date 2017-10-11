@@ -154,6 +154,8 @@ module ActiveRecord
       if @klass.respond_to?(:dynamic_arel_table)
         using_arel_table = @klass.dynamic_arel_table(Hash[*values.map { |k,v| [k.name,v] }.flatten(1)])
         scope.from!(using_arel_table.name)
+        scope.table.name = using_arel_table.table_name
+        scope.table.table_alias = @klass.table_name
       end
       # ****** END PARTITIONED PATCH ******
 
