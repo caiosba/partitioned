@@ -152,10 +152,15 @@ module ActiveRecord
       scope = @klass.unscoped
       # ****** BEGIN PARTITIONED PATCH ******
       if @klass.respond_to?(:dynamic_arel_table)
-        using_arel_table = @klass.dynamic_arel_table(Hash[*values.map { |k,v| [k.name,v] }.flatten(1)])
+        using_arel_table = @klass.dynamic_arel_table(Hash[*values.map { |k,v| [k.name,v] }.flatten(1)], @klass.table_name)
+        # change relation in substitutes so final SQL will point to right partition
+        substitutes.each do |substitute|
+          if substitute[0].relation == scope.table
+            substitute[0].relation =  using_arel_table
+          end
+        end
         scope.from!(using_arel_table.name)
-        scope.table.name = using_arel_table.table_name
-        scope.table.table_alias = @klass.table_name
+        scope.instance_variable_set('@table', using_arel_table)
       end
       # ****** END PARTITIONED PATCH ******
 

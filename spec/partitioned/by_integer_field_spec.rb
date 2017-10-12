@@ -135,6 +135,22 @@ module Partitioned
 
     end # partitioned block
 
+    describe "ActiveRecord::StatementCache" do
+      it "usus proper statement to select proper partition" do
+        employee = IntegerField::Employee.from_partition(1).first
+        employee2 = IntegerField::Employee.create! integer_field: 2, company_id: 2, name: 'John'
+        # save statement to StatementCache
+        IntegerField::Employee.from_partition(1).find(employee.id)
+        # perform update
+        employee = IntegerField::Employee.first
+        employee.updated_at = 1.hour.from_now
+        employee.save!
+        expect(employee.reload).to be_present
+        # if StatementCache is valid following should pass
+        expect(employee2.reload).to be_present
+      end
+    end
+
     it_should_behave_like "check that basic operations with postgres works correctly for integer key", IntegerField::Employee
 
   end # ByIntegerField
